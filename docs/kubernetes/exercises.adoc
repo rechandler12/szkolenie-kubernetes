@@ -1,0 +1,315 @@
+= Zadania
+
+== Zadanie 1: Instalacja dashboardu na klastrze
+
+=== Wprowadzenie
+Zarządzać i monitorować klaster można w bardzo różny sposób. Providerzy cloudowi dostarczają często swoje narzędzia. Mamy również do dyspozycji narzędzia konsolowe, dzisiaj jednak skupimy się na w miarę prostym graficznym narzędziu, które pozwoli nam przeglądać zasoby klastra. Zainstalujemy Kubernetes Dashboard za pomocą plików yaml. Dokumentacja znajduje się tutaj: https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/
+
+=== Kroki
+
+. Zainstaluj dashboard za pomocą komendy:
+[source,bash]
+----
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+----
+
+[start=2]
+. Sprawdź, czy dashboard się uruchomił za pomocą komendy `kubectl get pods -n kubernetes-dashboard`
+. Rezultat powinien być następujący:
+[source,bash]
+----
+NAME                                        READY   STATUS    RESTARTS   AGE
+dashboard-metrics-scraper-7bc864c59-rphjk   1/1     Running   0          100s
+kubernetes-dashboard-6c7ccbcf87-lkx8s       1/1     Running   0          100s
+----
+
+[start=4]
+. Utwórz plik `dashboard-adminuser.yaml` z zawartością:
+[source,yaml]
+----
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: admin-user
+  namespace: kubernetes-dashboard
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-user
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: admin-user
+  namespace: kubernetes-dashboard
+----
+
+[start=5]
+. Wrzuć pliki na klaster komendą `kubectl apply -f dashboard-adminuser.yaml`
+. Wygeneruj token, który będzie potrzebny do zalogowania `kubectl -n kubernetes-dashboard create token admin-user`
+. Powinieneś otrzymać token na kształt tego poniżej. Zapisz go na boku, przyda się za chwilę
+
+Przykładowy token
+
+[source]
+----
+eyJhbGciOiJSUzI1NiIsImtpZCI6IlZCYXdWMmJUZ3ozVEpKbHpIRVdFeHppOUV3T2llVDIxbmZ5UWpvOVQxT28ifQ.eyJhdWQiOlsiaHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3ZjLmNsdXN0ZXIubG9jYWwiXSwiZXhwIjoxNjg1MTI0ODc5LCJpYXQiOjE2ODUxMjEyNzksImlzcyI6Imh0dHBzOi8va3ViZXJuZXRlcy5kZWZhdWx0LnN2Yy5jbHVzdGVyLmxvY2FsIiwia3ViZXJuZXRlcy5pbyI6eyJuYW1lc3BhY2UiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsInNlcnZpY2VhY2NvdW50Ijp7Im5hbWUiOiJhZG1pbi11c2VyIiwidWlkIjoiZDU2MTJjZDktNjM5NS00ZWFhLTgxY2UtZGRkM2M0ODgzNDljIn19LCJuYmYiOjE2ODUxMjEyNzksInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlcm5ldGVzLWRhc2hib2FyZDphZG1pbi11c2VyIn0.d2Kab8lyfTb08cJS5wjoW_OEzE66UJVHCcqgIghQ6lWLDOnO4MaudwskTNhMIpUorJaMwDy3ifH0OwTo2P6WZ3Y_oywdj8T-EFws22Ot7sFvvXK1C1B8wTJYQnx4SviaqhixKnLoy1nWTMmUbtn2O7NPXB40_RvCt3ehoYzrleNUb3Cdp5nUfYYWHoyExSblQYvBVK98tj7eozGOeVMuYjvSemJVCdEmjzAXdqr7uCanzspw7I6DQDJCfgG9Hl7D-UdxiK9ZaiZjPt8xMLmmFkJ0FFNO9HuEx26HQe_1Dwim-yEcpRUmBbccEFZHioPCLW2eXElQxRX0xGHHE4OQIg
+----
+
+[start=8]
+. Uruchom proxy `kubectl proxy`
+. Wejdź na http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+. Zaloguj się za pomocą wcześniej wygenerowanego tokena
+. Obejrzyj zasoby swojego klastra
+
+== Zadanie 2: Utworzenie namespace
+
+. Utwórz imperatywnie namespace `szkolenie-imp`
+. Utwórz deklaratywnie namespace `szkolenie-dek`
+
+== Zadanie 3. Usunięcie namespace
+
+. Usuń namespace `szkolenie-imp` i `szkolenie-dek` w odpowiadający im sposób
+
+== Zadanie 4. Stworzenie poda
+
+. Utwórz namespace `szkolenie`
+. Utwórz imperatywnie poda z obrazu `nginx` o nazwie `nginx-imp` w powyższym namespace
+. Utwórz deklaratywnie poda z obrazu `nginx` o nazwie `nginx-dek` w powyższym namespace
+
+== Zadanie 5. Sprawdzenie poda
+
+. Wylistuj wszystkie pody w namespace `szkolenie`
+. Za pomocą komendy `kubectl describe` sprawdź pody `nginx-imp` i `nginx-dek`
+
+== Zadanie 6. Usunięcie poda
+
+. Usuń pody `nginx-imp` i `nginx-dek` w odpowiadający im sposób
+
+== Zadanie 7. Stworzenie deploymentu
+
+. Stwórz deployment z obrazu `nginx` o nazwie `nginx` w namespace `szkolenie`
+. Zrób 3 repliki
+
+== Zadanie 8. Sprawdzenie deploymentu
+
+. Wylistuj wszystkie deploymenty w namespace `szkolenie`
+. Wylistuj wszystkie pody w namespace `szkolenie`
+. Za pomocą komendy `kubectl describe` sprawdź deployment `nginx`
+
+== Zadanie 9. Skalowanie deploymentu
+
+. Zeskaluj deployment do 2 replik
+
+== Zadanie 10. Usunięcie deploymentu
+
+. Usuń któregoś z podów
+. Co się stało?
+. Usuń cały deployment
+
+== Zadanie 11. DaemonSet
+
+. Korzystając ze snippetu ze strony https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
+. Utwórz DaemonSet dla `fluentd`
+. Powtórz kroki z Zadania 8. i 9. 10. dla DaemonSet
+. Czy któryś krok był niemożliwy?
+
+== Zadanie 12. StatefulSets
+
+. Utwórz StatefulSets z aplikacją `nginx`
+. Możesz skorzystać z pomocy z  tej strony https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/
+. Pamiętaj o utworzeniu service
+. Zrób 3 repliki
+. Powtórz kroki z Zadania 8. i 9. 10. dla StatefulSets
+
+== Zadanie 13. Init container
+
+. Stwórz poda, który będzie zawierać InitContainer
+. InitContainer ma wypisać na konsolę jakiś komunikat
+. Możesz skorzystać z pomocy tutaj: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+. Sprawdź logi inicjalnego kontenera i głównego
+
+== Zadanie 14. Wiele kontenerów
+
+. Stwórz deployment, który będzie miał 2 kontenery, np. `nginx` i `busybox`
+. Sprawdź logi obu konternerów
+
+== Zadanie 15. Tworzenie joba
+
+. Stwórz joba, który wypisze coś na konsolę
+. Sprawdź logi joba
+. Sprawdź za pomocą `describe` co jest wewnątrz
+
+== Zadanie 16. Tworzenie CronJob
+
+. Stwórz takiego samego joba jak w Zadaniu 15.
+. Spraw, żeby uruchamiał się co 2 minuty
+
+== Zadanie 17. Service
+
+. Stwórz deployment z `nginx`
+. Stwórz Service, który będzie spinał pody utworzone przez Deployment
+
+== Zadanie 18. Utworzenie bazy danych
+
+. Na podstawie https://hub.docker.com/_/postgres utwórz Deployment z bazą danych
+. NIE twórz volumenu i sekertów
+
+== Zadanie 19. Utworzenie ServiceAccount
+
+. Stwórz ServiceAccount o nazwie `example-sa` w namespace `szkolenie-rbac`
+
+== Zadanie 20. Utworzenie roli
+
+. Stwórz rolę, która umożliwia listowanie namespace
+
+== Zadanie 21. Utworzenie roli binding
+
+. Stwórz role binding, który wiąże ServiceAccount i Rolę
+
+== Zadanie 22. Utworzenie tokenu i zalogowanie do dashboardu
+
+. Wygeneruj token dla tego ServiceAccount
+. Zaloguj się tokenem do dashboadu
+. Sprawdź, do czego masz dostęp
+
+== Zadanie 23. Utwórz użytkownika w K8s
+
+TIP: Możesz do pomocy użyć tutoriala https://medium.com/@HoussemDellai/rbac-with-kubernetes-in-minikube-4deed658ea7b
+
+. Stwórz certyfikat dla użytkownika `-subj /CN=user1/O=group1`
+. Podpisz go `-CA ~/.minikube/ca.crt -CAkey ~/.minikube/ca.key`
+. Stwórz w pliku `kubeconfig` definicje użytkownika i contextu
+. Użyj stworzonego kontekstu
+. Spróbuj tym użytkownikiem stworzyć namespace
+
+== Zadanie 24. Nadanie uprawnień
+
+. Dodaj użytkownikowi uprawnienia do czytania podów i namespace
+. Spróbuj pobrać pody
+. Spróbuj stworzyć namespace
+
+== Zadanie 25. Tworzenie service typu NodePort
+
+. Stwórz deployment z `httpd`
+. Stwórz Service typu NodePort, który łączy pody z tym service
+. Sprawdź IP Nodów za pomocą `kubectl get nodes -o wide`
+. Sprawdź za pomocą `kubectl get svc` na jakim porcie wystawił się service
+. Za pomocą curla uderz do każdego node i sprawdź czy nginx odpowiada
+
+== Zadanie 26. Tworzenie Ingressu
+
+. Włącz obsługę ingressów za pomocą `minikube addons enable ingress`
+. Utwórz Ingress, który będzie wskazywał na Service z zadania 25
+. Zainstaluj na maszynie lokalnie nginx `apt install nginx`
+. Ustaw reverse proxy, w pliku `/etc/nginx/nginx.conf` dodaj
+[source]
+----
+stream {
+  server {
+      listen 8888;
+      #TCP traffic will be forwarded to the specified server
+      proxy_pass IP_KLASTRA:NODE_PORT_INGRESSU;
+  }
+}
+----
+
+[start=5]
+. IP klastra możesz sprawdzić za pomocą `minikube ip`
+. Node port ingressu możesz sprawdzić za pomocą `kubectl get svc -n ingress-nginx`
+. Dodaj lokalnie w hosts (na swoim komputerze) wpis, który łączy domenę, której użyłeś z IP_MASZYNY
+. Sprawdź w przeglądarce wchodząc na IP_MASZYNY:8888, czy dostajesz odpowiednią odpowiedź
+
+== Zadanie 27. Utwórz Ingress dla Dashboardu
+
+. Utwórz Ingress dla dashboardu
+
+== Zadanie 28. Service ExternalName
+
+. Stwórz service typu ExternalName
+. Niech wskazuje na google.com
+. Utwórz dla niego Ingress
+. Sprawdź, czy działa
+
+== Zadanie 29. Service LoadBalancer
+
+. Stwórz service typu LoadBalancer
+. Co się stało?
+
+== Zadanie 30. Blokada ruchu za pomocą NetworkPolicy
+
+. Stwórz namespace `ns1`
+. Stwórz namespace `ns2`
+. W `ns1` stwórz bazę danych
+. W `ns2` stwórz instancję Hyperona
+. Połącz je ze sobą
+. Za pomocą NetworkPolicy ogranicz ruch pomiędzy namespaceami
+. Zrestartuj Hyperona
+. Sprawdź w logach czy faktycznie komunikacja została ucięta
+
+== Zadanie 31. Wystawienie Ingressa z Hyperonem
+
+. Usuń NetworkPolicy z poprzedniego zadania
+. Zrestartuj Hyperona
+. Utwórz Ingressa dla Hyperona
+. Sprawdź, czy działa
+
+== Zadanie 32. Przerobienie zmiennej środowiskowej z hasłem do Postgresa na Secret
+
+. Dodaj sekret, w którym będzie zapisane hasło do bazy danych
+. Dodaj obsługę sekretu w Postgresie, żeby wartość zmiennej środowiskowej była z niego brana
+
+== Zadanie 33. Użycie emptyDir
+
+. Skonfiguruj 2 kontenery `busybox`
+. Niech współdzielą wspólny katalog zdefiniowany jako `emptyDir`
+. Niech 1 kontener zapisze coś do tego katalogu
+. Sprawdź na drugim kontenerze czy coś jest w tym samym katalogu
+
+== Zadanie 34. Użycie hostPath
+
+. Skonfiguruj kontener z `nginx`
+. Podmountuj katalog `/etc` z hosta do `/etc-host`
+. Sprawdź, czy są pliki
+
+== Zadanie 35. Instalacja NFS CSI
+
+. Zainstaluj NFS CSI ze strony https://github.com/kubernetes-csi/csi-driver-nfs/blob/master/docs/install-csi-driver-v4.5.0.md
+. Dodaj storageclass
+[source,yaml]
+----
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-csi
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: 10.135.156.148
+  share: /k8s
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+mountOptions:
+  - nfsvers=4
+----
+
+== Zadanie 36. Wolumen dla bazy danych
+
+. Dodaj PVC
+. Zmodyfikuj Deployment z bazą danych, żeby obsługiwał PVC
+. Zrób 2 repliki
+
+== Zadanie 37. Baza danych jako statefulset
+
+. Przerób bazę danych na StatefulSet
+
+
+
+
+
